@@ -1,10 +1,13 @@
 import sys
 import requests
 import json
+from dotenv import load_dotenv
+import os
 
+load_dotenv()
 # Replace with your actual values or load from environment/config
-CLIENT_ID = "852713513916-c92gh7apmroicqu6jmagcflkh9edlrva.apps.googleusercontent.com"
-CLIENT_SECRET = "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"
+CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
+CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
 REDIRECT_URI = "http://localhost:3000/auth/google/callback"
 
 if len(sys.argv) < 2:

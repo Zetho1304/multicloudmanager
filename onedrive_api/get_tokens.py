@@ -1,9 +1,12 @@
 import sys
 import requests
 import json
+from dotenv import load_dotenv
+import os
 
-CLIENT_ID = "807f6163-8f68-4d22-b239-eb883a6408c2"
-CLIENT_SECRET = "GBZ8Q~A2OMaThu~NqJ6qAqMKAiU.OuaBLPbZBadp"
+load_dotenv()
+CLIENT_ID = os.getenv("ONEDRIVE_CLIENT_ID")
+CLIENT_SECRET = os.getenv("ONEDRIVE_CLIENT_SECRET")
 REDIRECT_URI = "http://localhost:3000/auth/onedrive/callback"
 
 if len(sys.argv) < 2:
