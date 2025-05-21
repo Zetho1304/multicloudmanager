@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&amp;display=swap" rel="stylesheet"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta charset="utf-8"/>
+<title>Unified Cloud File Manager</title>
+<link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet"/>
+<style>
+body {
+  padding: 2rem;
+  font-family: 'Roboto', sans-serif;
+  background-color: #1f1f1f;
+  color: #eaeaea;
+}
+
+h2, h5, label {
+  font-weight: 700;
+  color: #ffffff;
+}
+
+input, select, button {
+  font-family: 'Roboto', sans-serif;
+}
+
+#file-list-container {
+  max-height: 60vh;
+  overflow-y: auto;
+  border: 1px solid #333;
+  border-radius: 8px;
+  background-color: #2a2a2a;
+  padding: 0.5rem;
+}
+
+.file-item {
+  background-color: #2f2f2f;
+  border: none;
+  color: #eaeaea;
+  border-bottom: 1px solid #3c3c3c;
+}
+
+.file-item:hover {
+  background-color: #3a3a3a;
+  cursor: pointer;
+}
+
+.action-icon {
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
+  font-size: 1.2rem;
+  color: #ccc;
+}
+
+.action-icon:hover {
+  opacity: 1;
+  color: #fff;
+}
+
+.file-actions {
+  display: none;
+  gap: 0.5rem;
+}
+
+.file-item:hover .file-actions {
+  display: inline-flex;
+}
+
+.upload-section {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.upload-section input[type="file"] {
+  background-color: #3a3a3a;
+  color: #eaeaea;
+  border: 1px solid #555;
+  border-radius: 6px;
+  padding: 0.5rem;
+}
+
+.upload-section select {
+  background-color: #3a3a3a;
+  color: #eaeaea;
+  border: 1px solid #555;
+  border-radius: 6px;
+}
+
+.upload-section .btn-success {
+  background-color: #6c757d;
+  border: none;
+  font-weight: 500;
+}
+
+.upload-section .btn-success:hover {
+  background-color: #5a6268;
+}
+
+.border-bottom {
+  border-color: #333 !important;
+  background-color: #1f1f1f !important;
+}
+
+.badge-secondary {
+  background-color: #444 !important;
+}
+
+.badge-success {
+  background-color: #28a745 !important;
+}
+
+.badge-danger {
+  background-color: #dc3545 !important;
+}
+
+#file-search,
+select.form-control,
+input.form-control {
+  background-color: #2f2f2f;
+  border: 1px solid #444;
+  color: #eaeaea;
+}
+
+#file-search::placeholder {
+  color: #bbb;
+}
+
+.modal-content {
+  background-color: #2b2b2b;
+  color: #eaeaea;
+}
+
+.modal-header {
+  border-bottom: 1px solid #444;
+}
+
+.modal-body {
+  border-top: 1px solid #444;
+}
+
+#file-list-container::-webkit-scrollbar {
+  width: 8px;
+}
+#file-list-container::-webkit-scrollbar-thumb {
+  background-color: #555;
+  border-radius: 4px;
+}
+
+.btn-outline-dark {
+  color: #eaeaea;
+  border-color: #666;
+}
+.btn-outline-dark:hover {
+  background-color: #444;
+  border-color: #888;
+}
+
+select.form-control,
+input.form-control,
+.btn-outline-dark,
+.btn-success {
+  background-color: #3a3a3a !important;
+  color: #eaeaea !important;
+  border: 1px solid #555 !important;
+  border-radius: 6px !important;
+}
+select.form-control:focus,
+input.form-control:focus {
+  background-color: #444 !important;
+  border-color: #777 !important;
+  outline: none;
+}
+.btn-outline-dark:hover,
+.btn-success:hover {
+  background-color: #4a4a4a !important;
+  border-color: #888 !important;
+}
+</style>
+</head>
+<body>
+<!-- Top-right login + logout buttons -->
+<style>
+    .action-icon {
+      opacity: 0.6;
+      transition: opacity 0.2s;
+    }
+    .action-icon:hover {
+      opacity: 1;
+    }
+    .file-actions {
+      display: none;
+    }
+    .file-item:hover .file-actions {
+      display: inline-flex;
+      gap: 0.5rem;
+    }
+  
+#file-list-container {
+  max-height: 60vh;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 0.5rem;
+}
+.action-icon {
+  opacity: 0.6;
+  transition: opacity 0.2s;
+}
+.action-icon:hover {
+  opacity: 1;
+}
+.file-actions {
+  display: none;
+  gap: 0.5rem;
+}
+.file-item:hover .file-actions {
+  display: inline-flex;
+}
+</style>
+<div class="d-flex justify-content-between align-items-center mb-3 p-2 border-bottom" style="position: sticky; top: 0; z-index: 10; background: white;">
+<!-- Logo and Title -->
+<div class="d-flex align-items-center">
+<img alt="Logo" src="logo.png" style="height: 2em; margin-right: 0.5em;"/>
+<h2 class="mb-0">Multi Cloud File Manager</h2>
+</div>
+<!-- Buttons -->
+<div class="d-flex align-items-center">
+<a class="btn btn-danger mr-2" href="/auth/google">🔐 Google Login</a>
+<button class="btn btn-outline-danger mr-3" onclick="logout('google')">🚪 Logout</button>
+<a class="btn btn-primary mr-2" href="/auth/onedrive">🔐 OneDrive Login</a>
+<button class="btn btn-outline-primary" onclick="logout('onedrive')">🚪 Logout</button>
+</div>
+</div>
+<!-- Account Connection Status -->
+<div class="mb-3 d-flex align-items-center" id="account-status" style="gap: 2rem;"></div>
+<!-- Upload section -->
+<div class="upload-section mb-4">
+<style>
+      .custom-file-upload {
+        display: inline-block;
+        padding: 8px 16px;
+        cursor: pointer;
+        background-color: #3a3a3a;
+        color: white;
+        border-radius: 6px;
+        font-weight: 500;
+        transition: background-color 0.2s ease;
+      }
+      .custom-file-upload:hover {
+        background-color: #4a4a4a;
+      }
+      .custom-file-upload input[type="file"] {
+        display: none;
+      }
+    </style>
+<label class="custom-file-upload mb-0">
+      📁 Choose File
+      <input id="file-upload" type="file"/>
+</label>
+<span class="ml-2 text-muted" id="file-name" style="font-size: 0.9rem;">No file selected</span>
+<select class="form-control w-auto" id="upload-destination">
+<option disabled="" selected="">Upload to...</option>
+<option value="google">Google Drive</option>
+<option value="onedrive">OneDrive</option>
+</select>
+<button class="btn btn-success" onclick="uploadFile()">➕ Upload</button>
+<script>
+      document.getElementById('file-upload').addEventListener('change', function () {
+        const fileName = this.files[0]?.name || "No file selected";
+        document.getElementById('file-name').textContent = fileName;
+      });
+    </script>
+</div>
+<!-- Sort and Search -->
+<div class="d-flex align-items-center mb-3 flex-wrap" style="gap: 1rem;">
+<label class="mb-0">Sort by:</label>
+<select class="form-control w-auto" id="sort-name" onchange="loadAllFiles()">
+<option value="">Name</option>
+<option value="name-asc">A → Z</option>
+<option value="name-desc">Z → A</option>
+</select>
+<select class="form-control w-auto" id="sort-source" onchange="loadAllFiles()">
+<option value="">Source</option>
+<option value="Google Drive">Google Drive</option>
+<option value="OneDrive">OneDrive</option>
+</select>
+<input class="form-control w-25" id="file-search" placeholder="🔍 Search files..." type="text"/>
+<button class="btn btn-outline-dark" onclick="loadAllFiles()">🔄 Refresh</button>
+</div>
+<h5>📁 All Files</h5>
+<div id="file-list-container"><ul class="list-group" id="all-files"></ul></div>
+<!-- Preview Modal -->
+<div aria-hidden="true" aria-labelledby="previewModalLabel" class="modal fade" id="previewModal" role="dialog" tabindex="-1">
+<div class="modal-dialog modal-xl modal-dialog-centered" role="document">
+<div class="modal-content">
+<div class="modal-header">
+<h5 class="modal-title" id="previewModalLabel">Preview</h5>
+<button aria-label="Close" class="close" data-dismiss="modal" type="button">
+<span aria-hidden="true">×</span>
+</button>
+</div>
+<div class="modal-body" id="previewContent" style="min-height: 400px; display: flex; align-items: center; justify-content: center;">
+          Loading preview...
+        </div>
+</div>
+</div>
+</div>
+<!-- Scripts -->
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    function getFileIcon(name) {
+      const ext = name.split('.').pop().toLowerCase();
+      if (['jpg', 'jpeg', 'png', 'gif', 'bmp'].includes(ext)) return '🖼️';
+      if (['pdf'].includes(ext)) return '📕';
+      if (['doc', 'docx', 'odt'].includes(ext)) return '📄';
+      if (['xls', 'xlsx', 'csv'].includes(ext)) return '📊';
+      if (['ppt', 'pptx'].includes(ext)) return '📽️';
+      if (['zip', 'rar', '7z'].includes(ext)) return '📦';
+      if (['mp3', 'wav'].includes(ext)) return '🎵';
+      if (['mp4', 'mov', 'avi'].includes(ext)) return '🎞️';
+      if (['txt', 'md'].includes(ext)) return '📄';
+      return '📁';
+    }
+
+    async function loadAllFiles() {
+      const [googleRes, onedriveRes] = await Promise.all([
+        fetch('/files/google/list'),
+        fetch('/files/onedrive/list')
+      ]);
+
+      const googleFiles = await googleRes.json();
+      const onedriveFiles = await onedriveRes.json();
+
+      googleFiles.forEach(file => file.source = 'Google Drive');
+      onedriveFiles.forEach(file => file.source = 'OneDrive');
+
+      let allFiles = [...googleFiles, ...onedriveFiles];
+
+      const searchQuery = document.getElementById('file-search').value.toLowerCase();
+      if (searchQuery) {
+        allFiles = allFiles.filter(file => file.name.toLowerCase().includes(searchQuery));
+      }
+
+      const sourceFilter = document.getElementById('sort-source').value;
+      if (sourceFilter) {
+        allFiles = allFiles.filter(file => file.source === sourceFilter);
+      }
+
+      const nameSort = document.getElementById('sort-name').value;
+      if (nameSort === 'name-asc') {
+        allFiles.sort((a, b) => a.name.localeCompare(b.name));
+      } else if (nameSort === 'name-desc') {
+        allFiles.sort((a, b) => b.name.localeCompare(a.name));
+      }
+
+      const list = document.getElementById('all-files');
+      list.innerHTML = '';
+
+      allFiles.forEach(file => {
+        const li = document.createElement('li');
+        li.className = 'list-group-item d-flex justify-content-between align-items-center file-item';
+
+        const left = document.createElement('div');
+        const name = document.createElement('span');
+        name.textContent = `${getFileIcon(file.name)} ${file.name}`;
+        name.style.cursor = 'pointer';
+        name.onclick = () => openFile(file);
+
+        const badge = document.createElement('span');
+        badge.className = 'badge badge-secondary ml-2';
+        if (file.source === 'Google Drive') {
+  badge.innerHTML = '<img src="googledrive.png" alt="Google Drive" style="height: 1.2em;">';
+} else if (file.source === 'OneDrive') {
+  badge.innerHTML = '<img src="OneDrive_logo_and_wordmark.svg.png" alt="OneDrive" style="height: 1.2em;">';
+}
+
+        left.appendChild(name);
+        left.appendChild(badge);
+        const actions = document.createElement('div');
+        actions.className = 'file-actions';
+
+        const downloadBtn = document.createElement('span');
+        downloadBtn.innerHTML = '💾';
+        downloadBtn.title = 'Download';
+        downloadBtn.className = 'action-icon';
+        downloadBtn.onclick = () => {
+        const base = file.source === 'Google Drive' ? 'google' : 'onedrive';
+        const url = `/files/${base}/download?id=${file.id}&name=${encodeURIComponent(file.name)}`;
+        window.open(url, '_blank');
+        };
+
+        const renameBtn = document.createElement('span');
+        renameBtn.innerHTML = '✏️';
+        renameBtn.title = 'Rename';
+        renameBtn.className = 'action-icon';
+        renameBtn.onclick = () => renameFile(file);
+
+        const deleteBtn = document.createElement('span');
+        deleteBtn.innerHTML = '🗑️';
+        deleteBtn.title = 'Delete';
+        deleteBtn.className = 'action-icon';
+        deleteBtn.onclick = () => deleteFile(file);
+
+        actions.appendChild(downloadBtn);
+        actions.appendChild(renameBtn);
+        actions.appendChild(deleteBtn);
+
+        li.appendChild(left);
+        li.appendChild(actions);
+        list.appendChild(li);
+      });
+    }
+
+    function openFile(file) {
+      const ext = file.name.split('.').pop().toLowerCase();
+      const isPreviewable = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'pdf'].includes(ext);
+
+      if (!isPreviewable) {
+        if (file.webViewLink) {
+          window.open(file.webViewLink, '_blank');
+          return;
+        }
+        if (file.webUrl) {
+          window.open(file.webUrl, '_blank');
+          return;
+        }
+      }
+
+      const basePath = file.source === 'Google Drive' ? '/files/google' : '/files/onedrive';
+      const previewUrl = `${basePath}/preview?id=${file.id}&name=${encodeURIComponent(file.name)}`;
+      const downloadUrl = `${basePath}/download?id=${file.id}&name=${encodeURIComponent(file.name)}`;
+
+      const preview = document.getElementById('previewContent');
+      preview.innerHTML = '';
+
+      if (['jpg', 'jpeg', 'png', 'gif', 'bmp'].includes(ext)) {
+        const img = document.createElement('img');
+        img.src = previewUrl;
+        img.alt = file.name;
+        img.style.maxWidth = '100%';
+        img.style.maxHeight = '80vh';
+        preview.appendChild(img);
+      } else if (ext === 'pdf') {
+        const iframe = document.createElement('iframe');
+        iframe.src = previewUrl;
+        iframe.style.width = '100%';
+        iframe.style.height = '80vh';
+        preview.appendChild(iframe);
+      } else {
+        const link = document.createElement('a');
+        link.href = downloadUrl;
+        link.textContent = 'Click to download this file';
+        link.className = 'btn btn-outline-primary';
+        link.target = '_blank';
+        preview.appendChild(link);
+      }
+
+      $('#previewModal').modal('show');
+    }
+
+    async function uploadFile() {
+      const fileInput = document.getElementById('file-upload');
+      const destination = document.getElementById('upload-destination').value;
+      const file = fileInput.files[0];
+
+      if (!file || !destination) {
+        return alert('Please select a file and destination.');
+      }
+
+      const formData = new FormData();
+      formData.append('myfile', file);
+
+      const res = await fetch(`/files/${destination}/upload`, {
+        method: 'POST',
+        body: formData
+      });
+
+      const text = await res.text();
+      alert(text);
+      loadAllFiles();
+    }
+
+    function debounce(fn, delay) {
+      let timeout;
+      return (...args) => {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => fn(...args), delay);
+      };
+    }
+
+    async function loadAccountStatus() {
+      const container = document.getElementById('account-status');
+      container.innerHTML = '';
+
+      const accounts = [
+        { name: "Google Drive", endpoint: "/files/google/list" },
+        { name: "OneDrive", endpoint: "/files/onedrive/list" }
+      ];
+
+      for (const account of accounts) {
+        let status = false;
+        try {
+          const res = await fetch(account.endpoint);
+          const data = await res.json();
+          if (Array.isArray(data)) status = true;
+        } catch (e) {
+          status = false;
+        }
+
+        const div = document.createElement('div');
+        div.className = 'd-flex align-items-center';
+
+        const label = document.createElement('span');
+        label.className = `badge ${status ? 'badge-success' : 'badge-danger'}`;
+        label.textContent = `${account.name}: ${status ? 'Connected ✅' : 'Not Connected ❌'}`;
+
+        div.appendChild(label);
+        container.appendChild(div);
+      }
+    }
+
+    document.getElementById('file-search').addEventListener('input', debounce(loadAllFiles, 300));
+
+    async function logout(service) {
+  const res = await fetch(`/files/${service}/logout`);
+  alert(await res.text());
+  loadAccountStatus();
+  loadAllFiles();
+}
+
+async function deleteFile(file) {
+  if (file.source !== 'Google Drive') return;
+
+  const sure = confirm(`Delete "${file.name}" from Google Drive?`);
+  if (!sure) return;
+
+  const res = await fetch(`/files/google/delete?id=${file.id}`, {
+    method: "DELETE"
+  });
+
+  alert(await res.text());
+  loadAllFiles();
+}
+
+async function renameFile(file) {
+  if (file.source !== 'Google Drive') return;
+
+  const newName = prompt(`Rename "${file.name}" to:`);
+  if (!newName || newName === file.name) return;
+
+  const res = await fetch(`/files/google/rename`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ id: file.id, name: newName })
+  });
+
+  alert(await res.text());
+  loadAllFiles();
+}
+
+    loadAllFiles();
+    loadAccountStatus();
+  </script>
+<footer class="text-center mt-5 text-muted">©️ Zetho 2025</footer></body>
+</html>
